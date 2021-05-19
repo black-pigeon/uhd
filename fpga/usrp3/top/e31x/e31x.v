@@ -54,51 +54,22 @@ module e31x (
   //output [0:0]  PL_DDR3_ODT,
 
   //AVR SPI IO
-  input         AVR_CS_R,
-  output        AVR_IRQ,
-  output        AVR_MISO_R,
-  input         AVR_MOSI_R,
-  input         AVR_SCK_R,
-
   input         ONSWITCH_DB,
 
   // RF Board connections
   // Change to inout/output as
   // they are implemented/tested
-  input [34:0]  DB_EXP_1_8V,
+  //input [34:0]  DB_EXP_1_8V,
 
-  // Front-end Band Selects
-  output [2:0]  TX_BANDSEL,
-  output [2:0]  RX1_BANDSEL,
-  output [2:0]  RX2_BANDSEL,
-  output [1:0]  RX2C_BANDSEL,
-  output [1:0]  RX1B_BANDSEL,
-  output [1:0]  RX1C_BANDSEL,
-  output [1:0]  RX2B_BANDSEL,
-
-  // Enables
-  output        TX_ENABLE1A,
-  output        TX_ENABLE2A,
-  output        TX_ENABLE1B,
-  output        TX_ENABLE2B,
-
-  // Antenna Selects
-  output        VCTXRX1_V1,
-  output        VCTXRX1_V2,
-  output        VCTXRX2_V1,
-  output        VCTXRX2_V2,
-  output        VCRX1_V1,
-  output        VCRX1_V2,
-  output        VCRX2_V1,
-  output        VCRX2_V2,
-
-  // Leds
-  output        LED_TXRX1_TX,
-  output        LED_TXRX1_RX,
-  output        LED_RX1_RX,
-  output        LED_TXRX2_TX,
-  output        LED_TXRX2_RX,
-  output        LED_RX2_RX,
+  // Antenna Selects this will be changed by user himself
+  output  reg      VCTX1_V1,
+  output  reg      VCTX1_V2,
+  output  reg      VCTX2_V1,
+  output  reg      VCTX2_V2,
+  output  reg      VCRX1_V1,
+  output  reg      VCRX1_V2,
+  output  reg      VCRX2_V1,
+  output  reg      VCRX2_V2,
 
   // AD9361 connections
   input  [7:0]  CAT_CTRL_OUT,
@@ -108,7 +79,7 @@ module e31x (
   output        CAT_SCLK,
   output        CAT_MOSI,
   input         CAT_MISO,
-  input         CAT_BBCLK_OUT, //unused
+  //input         CAT_BBCLK_OUT, //unused
   output        CAT_SYNC,
   output        CAT_TXNRX,
   output        CAT_ENABLE,
@@ -148,6 +119,53 @@ module e31x (
   localparam NUM_CHANNELS_PER_RADIO = 2;
   localparam NUM_DBOARDS = 1;
   localparam NUM_CHANNELS = NUM_RADIOS * NUM_CHANNELS_PER_RADIO;
+  ////////////////////////////////////////////////////////////////////
+  //
+  // THESE PINS WILL NOT BE USED
+  //
+  //////////////////////////////////////////////////////////////////////
+
+  wire [2:0]  TX_BANDSEL;
+  wire [2:0]  RX1_BANDSEL;
+  wire [2:0]  RX2_BANDSEL;
+  wire [1:0]  RX2C_BANDSEL;
+  wire [1:0]  RX1B_BANDSEL;
+  wire [1:0]  RX1C_BANDSEL;
+  wire [1:0]  RX2B_BANDSEL;
+
+  wire        TX_ENABLE1A;
+  wire        TX_ENABLE2A;
+  wire        TX_ENABLE1B;
+  wire        TX_ENABLE2B;
+
+  wire        LED_TXRX1_TX;
+  wire        LED_TXRX1_RX;
+  wire        LED_RX1_RX;
+  wire        LED_TXRX2_TX;
+  wire        LED_TXRX2_RX;
+  wire        LED_RX2_RX;
+
+  wire         AVR_CS_R;
+  wire         AVR_IRQ;
+  wire         AVR_MISO_R;
+  wire         AVR_MOSI_R;
+  wire         AVR_SCK_R;
+
+
+  ////////////////////////////////////////////////////////////////////
+  //
+  // RF BAND SELECT
+  //
+  //////////////////////////////////////////////////////////////////////
+  wire        VCTXRX1_V1_R;
+  wire        VCTXRX1_V2_R;
+  wire        VCTXRX2_V1_R;
+  wire        VCTXRX2_V2_R;
+  wire        VCRX1_V1_R;
+  wire        VCRX1_V2_R;
+  wire        VCRX2_V1_R;
+  wire        VCRX2_V2_R;
+
 
   // Clocks
   wire bus_clk;
@@ -262,6 +280,46 @@ module e31x (
   //Misc
   wire [15:0] device_id;
 
+  /////////////////////////////////////////////////////////////////////
+  //
+  // RF band selecte, this maybe different from ettus
+  //
+  //////////////////////////////////////////////////////////////////////
+  always@(*)begin
+	case({VCTXRX1_V1_R, VCTXRX1_V2_R})
+		2'b00 : {VCTX1_V1, VCTX1_V2} = 2'b01;
+		2'b01 : {VCTX1_V1, VCTX1_V2} = 2'b01;
+		2'b10 : {VCTX1_V1, VCTX1_V2} = 2'b01;
+		2'b11 : {VCTX1_V1, VCTX1_V2} = 2'b10;
+	endcase
+  end
+  
+  always@(*)begin
+	case({VCTXRX1_V2_R, VCTXRX2_V2_R})
+		2'b00 : {VCTX2_V1, VCTX2_V2} = 2'b01;
+		2'b01 : {VCTX2_V1, VCTX2_V2} = 2'b01;
+		2'b10 : {VCTX2_V1, VCTX2_V2} = 2'b01;
+		2'b11 : {VCTX2_V1, VCTX2_V2} = 2'b10;
+	endcase
+  end
+  
+  always@(*)begin
+	case({VCRX1_V1_R, VCRX1_V2_R})
+		2'b00 : {VCRX1_V1, VCRX1_V2} = 2'b01;
+		2'b01 : {VCRX1_V1, VCRX1_V2} = 2'b01;
+		2'b10 : {VCRX1_V1, VCRX1_V2} = 2'b10;
+		2'b11 : {VCRX1_V1, VCRX1_V2} = 2'b01;
+	endcase
+  end
+
+  always@(*)begin
+	case({VCRX2_V1_R, VCRX2_V2_R})
+		2'b00 : {VCRX2_V1, VCRX2_V2} = 2'b01;
+		2'b01 : {VCRX2_V1, VCRX2_V2} = 2'b01;
+		2'b10 : {VCRX2_V1, VCRX2_V2} = 2'b10;
+		2'b11 : {VCRX2_V1, VCRX2_V2} = 2'b01;
+	endcase
+  end
   /////////////////////////////////////////////////////////////////////
   //
   // Resets:
@@ -762,10 +820,10 @@ module e31x (
   wire [2:0] TX2_BANDSEL;
 
   // Channel 0
-  assign {VCRX1_V1, // [15:15]
-          VCRX1_V2, // [14:14]
-          VCTXRX1_V1, // [13:13]
-          VCTXRX1_V2, // [12:12]
+  assign {VCRX1_V1_R, // [15:15]
+          VCRX1_V2_R, // [14:14]
+          VCTXRX1_V1_R, // [13:13]
+          VCTXRX1_V2_R, // [12:12]
           TX_ENABLE1B, // [11:11]
           TX_ENABLE1A, // [10:10]
           RX1C_BANDSEL, // [9:8]
@@ -780,10 +838,10 @@ module e31x (
          } = leds[1];
 
   // Channel 1
-  assign {VCRX2_V1,
-          VCRX2_V2,
-          VCTXRX2_V1,
-          VCTXRX2_V2,
+  assign {VCRX2_V1_R,
+          VCRX2_V2_R,
+          VCTXRX2_V1_R,
+          VCTXRX2_V2_R,
           TX_ENABLE2B,
           TX_ENABLE2A,
           RX2C_BANDSEL,
